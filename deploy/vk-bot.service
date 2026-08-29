@@ -1,0 +1,15 @@
+[Unit]
+Description=VK Community Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/vk-bot
+EnvironmentFile=/opt/vk-bot/.env
+ExecStart=/opt/vk-bot/.venv/bin/python /opt/vk-bot/main.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

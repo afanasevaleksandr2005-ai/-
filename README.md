@@ -68,6 +68,60 @@ python main.py
 
 Отредактируйте словарь `RESPONSES` в `vk_bot/autoresponses.py` — ключ ищется как подстрока в тексте сообщения (без учёта регистра), значение — ответ бота. `DEFAULT_RESPONSE` используется, если ни одно ключевое слово не найдено.
 
-## Развёртывание
+## Развёртывание на VPS (чтобы работал постоянно)
 
-Long Poll не требует публичного сервера — бот можно запускать на любой машине с доступом в интернет (VPS, домашний сервер и т.п.) как обычный процесс, например под `systemd` или в `screen`/`tmux`, чтобы он работал постоянно.
+Long Poll не требует публичного домена — подойдёт любой VPS с Ubuntu/Debian. Домашний ПК для круглосуточной работы не годится: как только его выключают, бот останавливается.
+
+### 1. Арендовать VPS
+
+Любой хостинг с Ubuntu 22.04/24.04, минимальная конфигурация (1 CPU, 1 ГБ RAM) достаточна. Например: Timeweb Cloud, REG.RU, Selectel, Beget, Yandex Cloud, Cloud.ru, Hetzner, Contabo и т.п. — выберите удобный по цене и оплате.
+
+### 2. Подключиться и установить зависимости
+
+```bash
+ssh root@ваш_ip
+
+apt update && apt install -y python3-venv git
+mkdir -p /opt/vk-bot
+cd /opt/vk-bot
+git clone <ссылка_на_ваш_репозиторий> .
+git checkout claude/hello-loapjd
+
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+### 3. Создать `.env`
+
+```bash
+cat > /opt/vk-bot/.env << 'EOF'
+VK_TOKEN=токен_сообщества
+VK_GROUP_ID=id_сообщества
+VK_ADMIN_IDS=ваш_id
+EOF
+chmod 600 /opt/vk-bot/.env
+```
+
+### 4. Настроить автозапуск через systemd
+
+```bash
+cp /opt/vk-bot/deploy/vk-bot.service /etc/systemd/system/vk-bot.service
+systemctl daemon-reload
+systemctl enable --now vk-bot
+```
+
+Проверить, что бот работает:
+
+```bash
+systemctl status vk-bot
+journalctl -u vk-bot -f
+```
+
+Теперь бот запускается автоматически при старте сервера и перезапускается сам при сбое (`Restart=on-failure`). Обновление кода после изменений:
+
+```bash
+cd /opt/vk-bot
+git pull
+.venv/bin/pip install -r requirements.txt
+systemctl restart vk-bot
+```
