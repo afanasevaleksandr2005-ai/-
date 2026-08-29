@@ -6,7 +6,7 @@ import vk_api
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 
 from . import config, database
-from .autoresponses import find_response
+from .autoresponses import ADMIN_PHONES, find_response
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("vk_bot")
@@ -42,13 +42,15 @@ class Bot:
         user_id = message["from_id"]
         text = message.get("text", "")
 
-        database.remember_user(user_id)
+        is_first_message = database.remember_user(user_id)
 
         if text.strip().lower().startswith(BROADCAST_COMMAND):
             self._handle_broadcast(user_id, text)
             return
 
         reply = find_response(text)
+        if is_first_message:
+            reply = f"{reply}\n\nНомера администрации для связи: {ADMIN_PHONES}"
         self.send_message(user_id, reply)
 
     def _handle_broadcast(self, user_id: int, text: str):

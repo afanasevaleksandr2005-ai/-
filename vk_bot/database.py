@@ -15,11 +15,13 @@ def init_db():
         )
 
 
-def remember_user(user_id: int):
+def remember_user(user_id: int) -> bool:
+    """Record the user as a subscriber. Returns True if this is their first message."""
     with _connect() as conn:
-        conn.execute(
+        cursor = conn.execute(
             "INSERT OR IGNORE INTO subscribers (user_id) VALUES (?)", (user_id,)
         )
+        return cursor.rowcount > 0
 
 
 def all_subscribers():
